@@ -19,10 +19,10 @@ namespace RayMagic {
 	private:
 		OrthographicCameraController m_CameraController;
 
-		Ref<FrameBuffer> m_FrameBuffer;
+		std::shared_ptr<FrameBuffer> m_FrameBuffer;
 
-		Ref<Texture2D> m_CheckerboardTexture;
-		Ref<Texture2D> m_SpriteSheet;
+		std::shared_ptr<Texture2D> m_CheckerboardTexture;
+		std::shared_ptr<Texture2D> m_SpriteSheet;
 
 		struct ProfileResult
 		{

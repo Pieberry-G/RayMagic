@@ -19,6 +19,7 @@ namespace RayMagic {
 		m_CameraController.SetZoomLevel(5.0f);
 
 		FramebufferSpecification fbSpec;
+		fbSpec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::Depth };
 		fbSpec.Width = 1600;
 		fbSpec.Height = 900;
 		m_FrameBuffer = FrameBuffer::Create(fbSpec);
@@ -72,6 +73,13 @@ namespace RayMagic {
 			}
 		}
 		Renderer2D::EndScene();
+
+		FramebufferSpecification fbspec = m_FrameBuffer->GetSpecification();
+		uint32_t* data = new uint32_t[fbspec.Width * fbspec.Height];
+		for (int i = 0; i < fbspec.Width * fbspec.Height; i++) {
+			data[i] = 0;
+		}
+		m_FrameBuffer->SetPixels(0, data);
 
 
 		m_FrameBuffer->Unbind();

@@ -111,8 +111,8 @@ namespace RayMagic {
 		virtual void SetLayout(BufferLayout layout) = 0;
 
 	
-		static Ref<VertexBuffer> Create(uint32_t size);
-		static Ref<VertexBuffer> Create(float* vertices, uint32_t size);
+		static std::shared_ptr<VertexBuffer> Create(uint32_t size);
+		static std::shared_ptr<VertexBuffer> Create(float* vertices, uint32_t size);
 	};
 
 	// Currently RayMagic only support 32-bit index buffers
@@ -126,6 +126,6 @@ namespace RayMagic {
 
 		virtual uint32_t GetCount() const = 0;
 
-		static Ref<IndexBuffer> Create(uint32_t* indices, uint32_t count);
+		static std::shared_ptr<IndexBuffer> Create(uint32_t* indices, uint32_t count);
 	};
 }
