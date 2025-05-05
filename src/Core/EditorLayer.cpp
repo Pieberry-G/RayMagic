@@ -49,38 +49,13 @@ namespace RayMagic {
 		RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1.0f });
 		RenderCommand::Clear();
 
-		Renderer2D::ResetStats();
-
-		static float rotation = 0.0f;
-		rotation += ts * 50.0f;
-
-		Renderer2D::BeginScene(m_CameraController.GetCamera());
-		Renderer2D::DrawRotatedQuad({ 1.0f, 0.0f }, { 0.8f, 0.8f }, glm::radians(-45.0f), { 0.8f, 0.2f, 0.3f, 1.0f });
-		Renderer2D::DrawQuad({ -1.0f, 0.0f }, { 0.8f, 0.8f }, { 0.8f, 0.2f, 0.3f, 1.0f });
-		Renderer2D::DrawQuad({ 0.5f, -0.5f }, { 0.5f, 0.75f }, { 0.2f, 0.3f, 0.8f, 1.0f });
-		Renderer2D::DrawQuad({ 0.0f, 0.0f, -0.1f }, { 20.0f, 20.0f }, m_CheckerboardTexture, 10.0f);
-		Renderer2D::DrawRotatedQuad({ -2.0f, 0.0f, 0.0f }, { 1.0f, 1.0f }, glm::radians(rotation), m_CheckerboardTexture, 20.0f);
-		//Renderer2D::DrawRotatedQuad({ 2.0f, 0.0f, 0.0f }, { 1.0f, 1.0f }, glm::radians(rotation), m_TextureStairs);
-		Renderer2D::EndScene();
-
-		Renderer2D::BeginScene(m_CameraController.GetCamera());
-		for (float y = -5.0; y < 5.0f; y += 0.5f)
-		{
-			for (float x = -5.0f; x < 5.0f; x += 0.5f)
-			{
-				glm::vec4 color = { (x + 5.0f) / 10.0f, 0.4f, (y + 5.0f) / 10.0f, 0.5f };
-				Renderer2D::DrawQuad({ x, y }, { 0.45f, 0.45f }, color);
-			}
-		}
-		Renderer2D::EndScene();
-
 		FramebufferSpecification fbspec = m_FrameBuffer->GetSpecification();
-		uint32_t* data = new uint32_t[fbspec.Width * fbspec.Height];
-		for (int i = 0; i < fbspec.Width * fbspec.Height; i++) {
-			data[i] = 0;
+		unsigned char* data = new unsigned char[fbspec.Width * fbspec.Height * 4];
+		for (int i = 0; i < fbspec.Width * fbspec.Height * 4; i++) {
+			data[i] = 255;
 		}
 		m_FrameBuffer->SetPixels(0, data);
-
+		delete[] data;
 
 		m_FrameBuffer->Unbind();
 	}

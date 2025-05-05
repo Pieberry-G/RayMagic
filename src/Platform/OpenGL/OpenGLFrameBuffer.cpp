@@ -8,61 +8,40 @@ namespace RayMagic {
 
 	namespace Utils {
 
-		static GLenum TextureTarget(bool multisampled)
+		static void CreateTextures(uint32_t* outID, uint32_t count)
 		{
-			return multisampled ? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_2D;
+			glCreateTextures(GL_TEXTURE_2D, count, outID);
 		}
 
-		static void CreateTextures(bool multisampled, uint32_t* outID, uint32_t count)
+		static void BindTexture(uint32_t id)
 		{
-			glCreateTextures(TextureTarget(multisampled), count, outID);
+			glBindTexture(GL_TEXTURE_2D, id);
 		}
 
-		static void BindTexture(bool multisampled, uint32_t id)
+		static void AttachColorTexture(uint32_t id, GLenum internalFormat, GLenum format, uint32_t width, uint32_t height, int index)
 		{
-			glBindTexture(TextureTarget(multisampled), id);
+			glTexStorage2D(GL_TEXTURE_2D, 1, internalFormat, width, height);
+
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + index, GL_TEXTURE_2D, id, 0);
 		}
 
-		static void AttachColorTexture(uint32_t id, int samples, GLenum internalFormat, GLenum format, uint32_t width, uint32_t height, int index)
+		static void AttachDepthTexture(uint32_t id, GLenum internalFormat, GLenum attachmentType, uint32_t width, uint32_t height)
 		{
-			bool multisampled = samples > 1;
-			if (multisampled)
-			{
-				glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, format, width, height, GL_FALSE);
-			}
-			else
-			{
-				glTexStorage2D(GL_TEXTURE_2D, 1, internalFormat, width, height);
+			glTexStorage2D(GL_TEXTURE_2D, 1, internalFormat, width, height);
 
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-			}
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + index, TextureTarget(multisampled), id, 0);
-		}
-
-		static void AttachDepthTexture(uint32_t id, int samples, GLenum internalFormat, GLenum attachmentType, uint32_t width, uint32_t height)
-		{
-			bool multisampled = samples > 1;
-			if (multisampled)
-			{
-				glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, internalFormat, width, height, GL_FALSE);
-			}
-			else
-			{
-				glTexStorage2D(GL_TEXTURE_2D, 1, internalFormat, width, height);
-
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-			}
-
-			glFramebufferTexture2D(GL_FRAMEBUFFER, attachmentType, TextureTarget(multisampled), id, 0);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, attachmentType, GL_TEXTURE_2D, id, 0);
 		}
 
 		static bool IsDepthFormat(FramebufferTextureFormat format)
@@ -126,27 +105,25 @@ namespace RayMagic {
 		glCreateFramebuffers(1, &m_RendererID);
 		glBindFramebuffer(GL_FRAMEBUFFER, m_RendererID);
 
-		bool multisampled = m_Specification.Samples > 1;
-
 		// Attachments
 		if (m_ColorAttachmentSpecifications.size())
 		{
 			m_ColorAttachments.resize(m_ColorAttachmentSpecifications.size());
-			Utils::CreateTextures(multisampled, m_ColorAttachments.data(), m_ColorAttachments.size());
+			Utils::CreateTextures(m_ColorAttachments.data(), m_ColorAttachments.size());
 
 			for (size_t i = 0; i < m_ColorAttachments.size(); i++)
 			{
-				Utils::BindTexture(multisampled, m_ColorAttachments[i]);
+				Utils::BindTexture(m_ColorAttachments[i]);
 				switch (m_ColorAttachmentSpecifications[i].TextureFormat)
 				{
 				case FramebufferTextureFormat::RGBA8:
-					Utils::AttachColorTexture(m_ColorAttachments[i], m_Specification.Samples, GL_RGBA8, GL_RGBA, m_Specification.Width, m_Specification.Height, i);
+					Utils::AttachColorTexture(m_ColorAttachments[i], GL_RGBA8, GL_RGBA, m_Specification.Width, m_Specification.Height, i);
 					break;
 				case FramebufferTextureFormat::RED_INTEGER:
-					Utils::AttachColorTexture(m_ColorAttachments[i], m_Specification.Samples, GL_R32I, GL_RED_INTEGER, m_Specification.Width, m_Specification.Height, i);
+					Utils::AttachColorTexture(m_ColorAttachments[i], GL_R32I, GL_RED_INTEGER, m_Specification.Width, m_Specification.Height, i);
 					break;
 				case FramebufferTextureFormat::RGB16F:
-					Utils::AttachColorTexture(m_ColorAttachments[i], m_Specification.Samples, GL_RGB16F, GL_RGB, m_Specification.Width, m_Specification.Height, i);
+					Utils::AttachColorTexture(m_ColorAttachments[i], GL_RGB16F, GL_RGB, m_Specification.Width, m_Specification.Height, i);
 					break;
 				}
 			}
@@ -154,12 +131,12 @@ namespace RayMagic {
 
 		if (m_DepthAttachmentSpecification.TextureFormat != FramebufferTextureFormat::None)
 		{
-			Utils::CreateTextures(multisampled, &m_DepthAttachment, 1);
-			Utils::BindTexture(multisampled, m_DepthAttachment);
+			Utils::CreateTextures(&m_DepthAttachment, 1);
+			Utils::BindTexture(m_DepthAttachment);
 			switch (m_DepthAttachmentSpecification.TextureFormat)
 			{
 			case FramebufferTextureFormat::DEPTH24STENCIL8:
-				Utils::AttachDepthTexture(m_DepthAttachment, m_Specification.Samples, GL_DEPTH24_STENCIL8, GL_DEPTH_ATTACHMENT, m_Specification.Width, m_Specification.Height);
+				Utils::AttachDepthTexture(m_DepthAttachment, GL_DEPTH24_STENCIL8, GL_DEPTH_ATTACHMENT, m_Specification.Width, m_Specification.Height);
 				break;
 			}
 		}
@@ -215,16 +192,13 @@ namespace RayMagic {
 		return pixelData;
 	}
 
-	void OpenGLFrameBuffer::SetPixels(uint32_t attachmentIndex, uint32_t* data)
+	void OpenGLFrameBuffer::SetPixels(uint32_t attachmentIndex, void* data)
 	{
 		RM_CORE_ASSERT(attachmentIndex < m_ColorAttachments.size());
 
-		bool multisampled = m_Specification.Samples > 1;
-		Utils::BindTexture(GL_TEXTURE_2D, m_ColorAttachments[0]);
+		Utils::BindTexture(m_ColorAttachments[0]);
 
-		glTexSubImage2D(m_ColorAttachments[0], 0, 0, 0, m_Specification.Width, m_Specification.Height, GL_RGBA, GL_UNSIGNED_BYTE, data);
-
-		Utils::BindTexture(GL_TEXTURE_2D, 0);
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_Specification.Width, m_Specification.Height, GL_RGBA, GL_UNSIGNED_BYTE, data);
 	}
 
 	void OpenGLFrameBuffer::ClearAttachment(uint32_t attachmentIndex, int value)

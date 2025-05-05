@@ -17,7 +17,7 @@ namespace RayMagic {
 
 		virtual void Resize(uint32_t width, uint32_t height) override;
 		virtual int ReadPixel(uint32_t attachmentIndex, int x, int y) override;
-		virtual void SetPixels(uint32_t attachmentIndex, uint32_t* data) override;
+		virtual void SetPixels(uint32_t attachmentIndex, void* data) override;
 
 		virtual void ClearAttachment(uint32_t attachmentIndex, int value) override;
 

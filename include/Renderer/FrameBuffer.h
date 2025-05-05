@@ -41,7 +41,6 @@ namespace RayMagic {
 	{
 		uint32_t Width, Height;
 		FramebufferAttachmentSpecification Attachments;
-		uint32_t Samples = 1;
 
 		bool SwapChainTarget = false;
 	};
@@ -56,7 +55,7 @@ namespace RayMagic {
 
 		virtual void Resize(uint32_t width, uint32_t height) = 0;
 		virtual int ReadPixel(uint32_t attachmentIndex, int x, int y) = 0;
-		virtual void SetPixels(uint32_t attachmentIndex, uint32_t* data) = 0;
+		virtual void SetPixels(uint32_t attachmentIndex, void* data) = 0;
 
 		virtual void ClearAttachment(uint32_t attachmentIndex, int value) = 0;
 
