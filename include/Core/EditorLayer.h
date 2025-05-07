@@ -2,6 +2,9 @@
 
 #include "RayMagic.h"
 
+#include "RayTracing/RayTracingRenderer.h"
+#include "RayTracing/Camera.h"
+
 namespace RayMagic {
 
 	class EditorLayer : public Layer
@@ -16,26 +19,17 @@ namespace RayMagic {
 		virtual void OnUpdate(float ts) override;
 		virtual void OnImGuiRender() override;
 		virtual void OnEvent(Event& e) override;
-	private:
-		OrthographicCameraController m_CameraController;
 
+	private:
 		std::shared_ptr<FrameBuffer> m_FrameBuffer;
 
-		std::shared_ptr<Texture2D> m_CheckerboardTexture;
-		std::shared_ptr<Texture2D> m_SpriteSheet;
-
-		struct ProfileResult
-		{
-			const char* Name;
-			float Time;
-		};
-
-		std::vector<ProfileResult> m_ProfileResults;
+		RayTracingRenderer m_RayTracingRenderer;
+		Camera m_RayTracingCamera;
 
 		bool m_ViewportFocused = false, m_ViewportHovered = false;
 		glm::vec2 m_ViewportSize = { 0.0f, 0.0f };
 
-		glm::vec4 m_SquareColor = { 0.2f, 0.3f, 0.8f, 1.0f };
+		float m_LastRenderTime = 0.0f;
 	};
 
 }

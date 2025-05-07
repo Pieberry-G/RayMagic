@@ -1,5 +1,7 @@
 #include "Core/EditorLayer.h"
 
+#include "Core/Timer.h"
+
 #include <imgui.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -7,22 +9,19 @@
 namespace RayMagic {
 
 	EditorLayer::EditorLayer()
-		: Layer("EditorLayer"), m_CameraController(1600.0f / 900.0f)
+		: Layer("EditorLayer")
 	{
 	}
 
 	void EditorLayer::OnAttach()
 	{
-		m_CheckerboardTexture = Texture2D::Create("../assets/textures/Checkerboard.png");
-		m_SpriteSheet = Texture2D::Create("../assets/textures/RPGpack_sheet_2X.png");
-
-		m_CameraController.SetZoomLevel(5.0f);
-
 		FramebufferSpecification fbSpec;
 		fbSpec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::Depth };
-		fbSpec.Width = 1600;
-		fbSpec.Height = 900;
+		fbSpec.Width = 1280;
+		fbSpec.Height = 720;
 		m_FrameBuffer = FrameBuffer::Create(fbSpec);
+
+		m_RayTracingCamera = Camera(45.0f, 1.778f, 0.1f, 1000.0f);
 	}
 
 	void EditorLayer::OnDetach()
@@ -32,30 +31,31 @@ namespace RayMagic {
 	void EditorLayer::OnUpdate(float ts)
 	{
 		// Resize
-		if (FramebufferSpecification spec = m_FrameBuffer->GetSpecification();
+		if (FramebufferSpecification fbSpec = m_FrameBuffer->GetSpecification();
 			m_ViewportSize.x > 0.0f && m_ViewportSize.y > 0.0f &&
-			(spec.Width != m_ViewportSize.x || spec.Height != m_ViewportSize.y))
+			(fbSpec.Width != m_ViewportSize.x || fbSpec.Height != m_ViewportSize.y))
 		{
 			m_FrameBuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
-			m_CameraController.OnResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+			m_RayTracingRenderer.Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+			m_RayTracingRenderer.ResetFrameIndex();
+			m_RayTracingCamera.SetViewportSize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 		}
 
-		// Update
-		if(m_ViewportFocused)
-			m_CameraController.OnUpdate(ts);
+		if (m_RayTracingCamera.OnUpdate(ts))
+			m_RayTracingRenderer.ResetFrameIndex();
 
 		// Render
+		Timer timer;
 		m_FrameBuffer->Bind();
 		RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1.0f });
 		RenderCommand::Clear();
 
-		FramebufferSpecification fbspec = m_FrameBuffer->GetSpecification();
-		unsigned char* data = new unsigned char[fbspec.Width * fbspec.Height * 4];
-		for (int i = 0; i < fbspec.Width * fbspec.Height * 4; i++) {
-			data[i] = 255;
+		if (m_ViewportSize.x > 0 && m_ViewportSize.y > 0)
+		{
+			m_RayTracingRenderer.Render(m_RayTracingCamera);
+			m_FrameBuffer->SetPixels(0, m_RayTracingRenderer.GetImageData());
 		}
-		m_FrameBuffer->SetPixels(0, data);
-		delete[] data;
+		m_LastRenderTime = timer.ElapsedMillis();
 
 		m_FrameBuffer->Unbind();
 	}
@@ -130,13 +130,7 @@ namespace RayMagic {
 		ImGui::Begin("Settings");
 
 		auto stats = Renderer2D::GetStats();
-		ImGui::Text("Renderer2D Stats:");
-		ImGui::Text("Draw Calls: %d", stats.DrawCalls);
-		ImGui::Text("Quads: %d", stats.QuadCount);
-		ImGui::Text("Vertices: %d", stats.GetTotalVertexCount());
-		ImGui::Text("Indices: %d", stats.GetTotalIndexCount());
-
-		ImGui::ColorEdit4("Square Color", glm::value_ptr(m_SquareColor));
+		ImGui::Text("Last render: %.3fms", m_LastRenderTime);
 
 		ImGui::End();
 
@@ -160,7 +154,7 @@ namespace RayMagic {
 
 	void EditorLayer::OnEvent(Event& e)
 	{
-		m_CameraController.OnEvent(e);
+		//m_CameraController.OnEvent(e);
 	}
 
 }
