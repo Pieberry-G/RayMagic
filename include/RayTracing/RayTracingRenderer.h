@@ -19,22 +19,6 @@ namespace RayMagic {
 		void ResetFrameIndex() { m_FrameIndex = 1; }
 
 	private:
-		struct HitPayload
-		{
-			float HitDistance;
-			glm::vec3 WorldPosition;
-			glm::vec3 WorldNormal;
-
-			uint32_t ObjectIndex;
-		};
-
-		//glm::vec4 PerPixel(uint32_t x, uint32_t y); //RayGen
-
-		//HitPayload TraceRay(const Ray& ray);
-		//HitPayload ClosestHit(const Ray& ray, float hitDistance, int objectIndex);
-		//HitPayload Miss(const Ray& ray);
-
-	private:
 		uint32_t m_ImageWidth = 0, m_ImageHeight = 0;
 		uint32_t* m_ImageData = nullptr;
 		glm::vec4* m_AccumulationData = nullptr;

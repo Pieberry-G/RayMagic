@@ -27,4 +27,4 @@ target_link_libraries(RayMagic glad glfw glm imgui spdlog stb_image)
 set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT RayMagic)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-# file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/assets/config/imgui.ini" DESTINATION "${CMAKE_BINARY_DIR}/RayMagic")
+file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/assets/config/imgui.ini" DESTINATION "${CMAKE_BINARY_DIR}/RayMagic")

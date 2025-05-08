@@ -154,13 +154,13 @@ namespace RayMagic {
         if (r < res.Material.SpecularRate)  // ¾µÃæ·´Éä
         {
             glm::vec3 ref = normalize(reflect(ray.Direction, res.Material.Normal));
-            randomRay.Direction = mix(ref, randomRay.Direction, res.Material.Roughness);
+            randomRay.Direction = normalize(mix(ref, randomRay.Direction, res.Material.Roughness));
             color = PathTracing(shapes, randomRay, depth + 1) * cosine;
         }
         else if (res.Material.SpecularRate <= r && r <= res.Material.RefractRate)    // ÕÛÉä
         {
             glm::vec3 ref = glm::normalize(refract(ray.Direction, res.Material.Normal, float(res.Material.RefractAngle)));
-            randomRay.Direction = mix(ref, -randomRay.Direction, res.Material.RefractRoughness);
+            randomRay.Direction = normalize(mix(ref, -randomRay.Direction, res.Material.RefractRoughness));
             color = PathTracing(shapes, randomRay, depth + 1) * cosine;
         }
         else    // Âþ·´Éä
@@ -220,13 +220,13 @@ namespace RayMagic {
                         if (r < res.Material.SpecularRate)  // ¾µÃæ·´Éä
                         {
                             glm::vec3 ref = normalize(reflect(ray.Direction, res.Material.Normal));
-                            randomRay.Direction = mix(ref, randomRay.Direction, res.Material.Roughness);
+                            randomRay.Direction = normalize(mix(ref, randomRay.Direction, res.Material.Roughness));
                             color = PathTracing(shapes, randomRay, 0);
                         }
                         else if (res.Material.SpecularRate <= r && r <= res.Material.RefractRate)    // ÕÛÉä
                         {
                             glm::vec3 ref = normalize(refract(ray.Direction, res.Material.Normal, float(res.Material.RefractAngle)));
-                            randomRay.Direction = mix(ref, -randomRay.Direction, res.Material.RefractRoughness);
+                            randomRay.Direction = normalize(mix(ref, -randomRay.Direction, res.Material.RefractRoughness));
                             color = PathTracing(shapes, randomRay, 0);
                         }
                         else    // Âþ·´Éä
@@ -237,13 +237,17 @@ namespace RayMagic {
                         }
                         color *= BRIGHTNESS;
                     }
+
                     m_AccumulationData[i * m_ImageWidth + j] += glm::vec4(color, 1.0f);
 
                     glm::vec4 accumualtionColor = m_AccumulationData[i * m_ImageWidth + j];
                     accumualtionColor /= (float)m_FrameIndex;
-
                     accumualtionColor = glm::clamp(accumualtionColor, glm::vec4(0.0f), glm::vec4(1.0f));
-                    m_ImageData[i * m_ImageWidth + j] = Utils::ConvertToRGBA(accumualtionColor);
+
+                    // Ù¤Âí½ÃÕý
+                    glm::vec4 gammaColor = glm::pow(accumualtionColor, glm::vec4(1.0f / 2.2));
+                    gammaColor.w = accumualtionColor.w;
+                    m_ImageData[i * m_ImageWidth + j] = Utils::ConvertToRGBA(gammaColor);
                 }
             }
         });
