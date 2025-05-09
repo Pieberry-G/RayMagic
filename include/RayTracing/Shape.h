@@ -1,20 +1,11 @@
 #pragma once
 
 #include "RayTracing/Ray.h"
-#include "RayTracing/SurfaceMaterial.h"
+#include "RayTracing/Material.h"
+
 #include <glm/glm.hpp>
 
 namespace RayMagic {
-
-    // 颜色
-    const glm::vec3 RED(1, 0.5, 0.5);
-    const glm::vec3 GREEN(0.5, 1, 0.5);
-    const glm::vec3 BLUE(0.5, 0.5, 1);
-    const glm::vec3 YELLOW(1.0, 1.0, 0.1);
-    const glm::vec3 CYAN(0.1, 1.0, 1.0);
-    const glm::vec3 MAGENTA(1.0, 0.1, 1.0);
-    const glm::vec3 GRAY(0.5, 0.5, 0.5);
-    const glm::vec3 WHITE(1, 1, 1);
 
 	class Shape
 	{
@@ -27,77 +18,76 @@ namespace RayMagic {
     class Triangle : public Shape
     {
     public:
-        Triangle() = default;
-        Triangle(glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, glm::vec3 c)
+        Triangle(glm::vec3 P1, glm::vec3 P2, glm::vec3 P3, glm::vec3 C)
         {
-            P1 = p1, P2 = p2, P3 = p3;
-            Material.Normal = normalize(cross(P2 - P1, P3 - P1));
-            Material.Color = c;
+            p1 = P1, p2 = P2, p3 = P3;
+            center = (p1 + p2 + p3) / 3.0f;
+            material.normal = normalize(cross(p2 - p1, p3 - p1));
+            material.color = C;
         }
 
         // 与光线求交
-        HitResult Intersect(Ray ray)
+        virtual HitResult Intersect(Ray ray)
         {
             HitResult res;
 
-            glm::vec3 S = ray.StartPoint;       // 射线起点
-            glm::vec3 d = ray.Direction;        // 射线方向
-            glm::vec3 N = Material.Normal;      // 法向量
+            glm::vec3 S = ray.startPoint;       // 射线起点
+            glm::vec3 d = ray.direction;        // 射线方向
+            glm::vec3 N = material.normal;      // 法向量
             if (glm::dot(N, d) > 0.0f) N = -N;  // 获取正确的法向量
 
             // 如果视线和三角形平行
             if (fabs(dot(N, d)) < 0.00001f) return res;
 
             // 距离
-            float t = (dot(N, P1) - dot(S, N)) / dot(d, N);
+            float t = (dot(N, p1) - dot(S, N)) / dot(d, N);
             if (t < 0.0005f) return res;        // 如果三角形在相机背面
 
             // 交点计算
             glm::vec3 P = S + d * t;
 
             // 判断交点是否在三角形中
-            glm::vec3 c1 = cross(P2 - P1, P - P1);
-            glm::vec3 c2 = cross(P3 - P2, P - P2);
-            glm::vec3 c3 = cross(P1 - P3, P - P3);
-            glm::vec3 n = Material.Normal;      // 需要 "原生法向量" 来判断
+            glm::vec3 c1 = cross(p2 - p1, P - p1);
+            glm::vec3 c2 = cross(p3 - p2, P - p2);
+            glm::vec3 c3 = cross(p1 - p3, P - p3);
+            glm::vec3 n = material.normal;      // 需要 "原生法向量" 来判断
             if (dot(c1, n) < 0 || dot(c2, n) < 0 || dot(c3, n) < 0) return res;
 
             // 装填返回结果
-            res.IsHit = true;
-            res.Distance = t;
-            res.HitPoint = P;
-            res.Material = Material;
-            res.Material.Normal = N;    // 要返回正确的法向
+            res.distance = t;
+            res.hitPoint = P;
+            res.material = material;
+            res.material.normal = N;    // 要返回正确的法向
             return res;
         };
 
     public:
-        glm::vec3 P1, P2, P3;       // 三顶点
-        SurfaceMaterial Material;   // 材质
+        glm::vec3 p1, p2, p3;       // 三顶点
+        glm::vec3 center;
+        Material material;   // 材质
     };
 
     // 球
     class Sphere : public Shape
     {
     public:
-        Sphere() = default;
-        Sphere(glm::vec3 o, double r, glm::vec3 c) { O = o; R = r; Material.Color = c; }
+        Sphere(glm::vec3 O, float R, glm::vec3 C) { o = O; r = R; material.color = C; }
 
         // 与光线求交
         HitResult Intersect(Ray ray)
         {
             HitResult res;
 
-            glm::vec3 S = ray.StartPoint;        // 射线起点
-            glm::vec3 d = ray.Direction;         // 射线方向
+            glm::vec3 S = ray.startPoint;        // 射线起点
+            glm::vec3 d = ray.direction;         // 射线方向
 
-            float OS = length(O - S);
-            float SH = dot(O - S, d);
+            float OS = length(o - S);
+            float SH = dot(o - S, d);
             float OH = sqrt(pow(OS, 2) - pow(SH, 2));
 
-            if (OH > R) return res;     // OH大于半径则不相交
+            if (OH > r) return res;     // OH大于半径则不相交
 
-            float PH = sqrt(pow(R, 2) - pow(OH, 2));
+            float PH = sqrt(pow(r, 2) - pow(OH, 2));
 
             float t1 = glm::length(SH) - PH;
             float t2 = glm::length(SH) + PH;
@@ -108,18 +98,17 @@ namespace RayMagic {
             if (fabs(t1) < 0.0005f || fabs(t2) < 0.0005f) return res;
 
             // 装填返回结果
-            res.IsHit = true;
-            res.Distance = t;
-            res.HitPoint = P;
-            res.Material = Material;
-            res.Material.Normal = normalize(P - O); // 要返回正确的法向
+            res.distance = t;
+            res.hitPoint = P;
+            res.material = material;
+            res.material.normal = normalize(P - o); // 要返回正确的法向
             return res;
         }
 
     public:
-        glm::vec3 O;                // 圆心
-        double R;                   // 半径
-        SurfaceMaterial Material;   // 材质
+        glm::vec3 o;                // 圆心
+        float r;                   // 半径
+        Material material;   // 材质
     };
 
 }

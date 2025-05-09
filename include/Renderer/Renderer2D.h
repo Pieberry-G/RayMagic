@@ -4,6 +4,8 @@
 
 #include "Renderer/Texture.h"
 
+#include "RayTracing/Camera.h"
+
 namespace RayMagic {
 
 	class Renderer2D
@@ -13,6 +15,7 @@ namespace RayMagic {
 		static void Shutdown();
 
 		static void BeginScene(OrthographicCamera& camera);
+		static void BeginScene(Camera& camera);
 		static void EndScene();
 		static void Flush();
 

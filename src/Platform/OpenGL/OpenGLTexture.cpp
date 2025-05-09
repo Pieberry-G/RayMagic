@@ -78,4 +78,26 @@ namespace RayMagic {
 		glBindTextureUnit(slot, m_RendererID);
 	}
 
+
+	OpenGLTextureBuffer::OpenGLTextureBuffer()
+	{
+		glCreateBuffers(1, &m_BufferID);
+		glBindBuffer(GL_TEXTURE_BUFFER, m_BufferID);
+		glCreateTextures(GL_TEXTURE_BUFFER, 1, &m_RendererID);
+		glBindTexture(GL_TEXTURE_BUFFER, m_RendererID);
+		glTexBuffer(GL_TEXTURE_BUFFER, GL_RGB32F, m_BufferID);
+	}
+
+	OpenGLTextureBuffer::~OpenGLTextureBuffer()
+	{
+		glDeleteBuffers(1, &m_BufferID);
+		glDeleteTextures(1, &m_RendererID);
+	}
+
+	void OpenGLTextureBuffer::SetData(const std::vector<glm::vec3>& data)
+	{
+		glBindBuffer(GL_TEXTURE_BUFFER, m_BufferID);
+		glBufferData(GL_TEXTURE_BUFFER, data.size() * sizeof(data), &data[0], GL_STATIC_DRAW);
+	}
+
 }

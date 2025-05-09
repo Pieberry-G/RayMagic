@@ -40,6 +40,7 @@ namespace RayMagic {
 			m_RayTracingRenderer.ResetFrameIndex();
 			m_RayTracingCamera.SetViewportSize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 		}
+		if (m_ViewportSize.x == 0 || m_ViewportSize.y == 0) return;
 
 		if (m_RayTracingCamera.OnUpdate(ts))
 			m_RayTracingRenderer.ResetFrameIndex();
@@ -50,12 +51,16 @@ namespace RayMagic {
 		RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1.0f });
 		RenderCommand::Clear();
 
-		if (m_ViewportSize.x > 0 && m_ViewportSize.y > 0)
-		{
-			m_RayTracingRenderer.Render(m_RayTracingCamera);
-			m_FrameBuffer->SetPixels(0, m_RayTracingRenderer.GetImageData());
-		}
+		m_RayTracingRenderer.Render(m_RayTracingCamera);
+		m_FrameBuffer->SetPixels(0, m_RayTracingRenderer.GetImageData());
+
 		m_LastRenderTime = timer.ElapsedMillis();
+
+		//Renderer2D::BeginScene(m_RayTracingCamera);
+		////Renderer2D::DrawRotatedQuad({ 1.0f, 0.0f }, { 0.8f, 0.8f }, glm::radians(-45.0f), { 0.8f, 0.2f, 0.3f, 1.0f });
+		////Renderer2D::DrawQuad({ -1.0f, 0.0f }, { 0.8f, 0.8f }, { 0.8f, 0.2f, 0.3f, 1.0f });
+		//Renderer2D::DrawQuad({ 0.0f, 0.0f }, { 0.5f, 0.5f }, { 0.2f, 0.3f, 0.8f, 1.0f });
+		//Renderer2D::EndScene();
 
 		m_FrameBuffer->Unbind();
 	}

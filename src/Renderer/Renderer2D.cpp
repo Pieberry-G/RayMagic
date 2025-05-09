@@ -27,13 +27,13 @@ namespace RayMagic {
 		std::shared_ptr<VertexArray> QuadVertexArray;
 		std::shared_ptr<VertexBuffer> QuadVertexBuffer;
 		std::shared_ptr<Shader> TextureShader;
-		std::shared_ptr<Texture> WhiteTexture;
+		std::shared_ptr<Texture2D> WhiteTexture;
 
 		uint32_t QuadIndexCount = 0;
 		QuadVertex* QuadVertexBufferBase = nullptr;
 		QuadVertex* QuadVertexBufferPtr = nullptr;
 
-		std::array<std::shared_ptr<Texture>, MaxTextureSlots> TextureSlots;
+		std::array<std::shared_ptr<Texture2D>, MaxTextureSlots> TextureSlots;
 		uint32_t TextureSlotIndex = 1; // 0 = white texture
 
 		glm::vec4 QuadVertexPositions[4];
@@ -99,6 +99,17 @@ namespace RayMagic {
 	void Renderer2D::Shutdown()
 	{
 
+	}
+
+	void Renderer2D::BeginScene(Camera& camera)
+	{
+		s_Data.TextureShader->Bind();
+		s_Data.TextureShader->SetMat4("u_ViewProjection", camera.GetViewProjection());
+
+		s_Data.QuadIndexCount = 0;
+		s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;
+
+		s_Data.TextureSlotIndex = 1;
 	}
 
 	void Renderer2D::BeginScene(OrthographicCamera& camera)

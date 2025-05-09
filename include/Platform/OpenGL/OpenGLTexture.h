@@ -31,4 +31,25 @@ namespace RayMagic {
 		uint32_t m_RendererID;
 		GLenum m_InternalFormat, m_DataFormat;
 	};
+
+	class OpenGLTextureBuffer : public TextureBuffer
+	{
+	public:
+		OpenGLTextureBuffer();
+		virtual ~OpenGLTextureBuffer();
+
+		virtual uint32_t GetRendererID() const override { return m_RendererID; }
+
+		virtual void SetData(const std::vector<glm::vec3>& data) override;
+
+		//virtual void Bind(uint32_t slot = 0) const override;
+
+		virtual bool operator==(const Texture& other) const override
+		{
+			return m_RendererID == ((OpenGLTextureBuffer&)other).m_RendererID;
+		}
+	private:
+		uint32_t m_BufferID, m_RendererID;
+		GLenum m_InternalFormat, m_DataFormat;
+	};
 }
